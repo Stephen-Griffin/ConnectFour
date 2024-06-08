@@ -1,1 +1,3 @@
 # personalProject
+
+# first individual project... 
