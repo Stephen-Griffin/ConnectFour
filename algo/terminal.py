@@ -13,7 +13,9 @@ def is_terminal(board):
                 return True
             
     # checking sloped (up and to the right)
-
+    for col in range (4):
+        for row in range(3):
+            if board[row][col] == board[row][col]
 
 
 
