@@ -1,63 +1,113 @@
-from terminal import is_terminal
+import pygame
+import sys
 from minimax import minimax, get_valid_locations, drop_piece, get_next_open_row
+from terminal import is_terminal, winning_move
 
-class Main:
+# Constants
+ROW_COUNT = 6
+COLUMN_COUNT = 7
+SQUARESIZE = 100
+RADIUS = int(SQUARESIZE / 2 - 5)
+width = COLUMN_COUNT * SQUARESIZE
+height = (ROW_COUNT + 1) * SQUARESIZE
+size = (width, height)
 
-    def run(self):
-        board = self.create_connect_four_board()
-        current_player = 'R'  # Start with player Red
-        while True:
-            self.print_board(board)
-            if current_player == 'R':
-                column = self.get_human_move(board, current_player)
-            else:
-                column = self.get_ai_move(board)
+# Colors
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+BLUE = (0, 0, 255)
+WHITE = (255, 255, 255)
 
-            if not self.place_piece(board, column, current_player):
-                print("Column is full. Try another one.")
-                continue
+pygame.init()
+screen = pygame.display.set_mode(size)
+myfont = pygame.font.SysFont("monospace", 75)
 
-            if is_terminal(board):
-                self.print_board(board)
-                print(f"Player {current_player} wins!")
-                break
+def create_board():
+    board = [[' ' for _ in range(COLUMN_COUNT)] for _ in range(ROW_COUNT)]
+    return board
 
-            current_player = 'Y' if current_player == 'R' else 'R'  # Switch players
+def draw_board(board):
+    for c in range(COLUMN_COUNT):
+        for r in range(ROW_COUNT):
+            pygame.draw.rect(screen, BLUE, (c * SQUARESIZE, (r+1) * SQUARESIZE, SQUARESIZE, SQUARESIZE))
+            pygame.draw.circle(screen, WHITE, (int(c * SQUARESIZE + SQUARESIZE / 2), int((r+1) * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
+    
+    for c in range(COLUMN_COUNT):
+        for r in range(ROW_COUNT):        
+            if board[r][c] == 'R':
+                pygame.draw.circle(screen, RED, (int(c * SQUARESIZE + SQUARESIZE / 2), height - int((r+1) * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
+            elif board[r][c] == 'Y': 
+                pygame.draw.circle(screen, YELLOW, (int(c * SQUARESIZE + SQUARESIZE / 2), height - int((r+1) * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
+    pygame.display.update()
 
-    def create_connect_four_board(self):
-        return [[' ' for _ in range(7)] for _ in range(6)]
+def animate_drop(board, col, row, piece):
+    for r in range(row+1):
+        draw_board(board)
+        pygame.draw.circle(screen, RED if piece == 'R' else YELLOW, (int(col * SQUARESIZE + SQUARESIZE / 2), height - int((r+1) * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
+        pygame.display.update()
+        pygame.time.wait(100)
 
-    def print_board(self, board):
-        for row in board:
-            print(' '.join(row))
-        print('0 1 2 3 4 5 6')  # Column numbers
+def main():
+    board = create_board()
+    game_over = False
+    turn = 0  # Player 0 is Red, Player 1 is Yellow
 
-    def place_piece(self, board, column, player_color):
-        row = get_next_open_row(board, column)
-        if row is not None:
-            drop_piece(board, row, column, player_color)
-            return True
-        return False
+    draw_board(board)
+    pygame.display.update()
 
-    def get_human_move(self, board, current_player):
-        while True:
-            try:
-                column = int(input(f"Player {current_player}, choose a column (0-6): "))
-                if column < 0 or column > 6:
-                    raise ValueError
-                if column not in get_valid_locations(board):
-                    print("Column is full. Try another one.")
-                    continue
-                return column
-            except ValueError:
-                print("Invalid column. Please choose a number between 0 and 6.")
+    while not game_over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                sys.exit()
 
-    def get_ai_move(self, board):
-        column, minimax_score = minimax(board, 5, -float('inf'), float('inf'), True)
-        print(f"AI chooses column {column}")
-        return column
+            if event.type == pygame.MOUSEMOTION:
+                pygame.draw.rect(screen, BLACK, (0, 0, width, SQUARESIZE))
+                posx = event.pos[0]
+                if turn == 0:
+                    pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE / 2)), RADIUS)
+                else:
+                    pygame.draw.circle(screen, YELLOW, (posx, int(SQUARESIZE / 2)), RADIUS)
+            pygame.display.update()
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                pygame.draw.rect(screen, BLACK, (0, 0, width, SQUARESIZE))
+                # Ask for Player 1 Input
+                if turn == 0:
+                    posx = event.pos[0]
+                    col = int(posx // SQUARESIZE)
+
+                    if col in get_valid_locations(board):
+                        row = get_next_open_row(board, col)
+                        animate_drop(board, col, row, 'R')
+                        drop_piece(board, row, col, 'R')
+
+                        if is_terminal(board):
+                            label = myfont.render("Player 1 wins!!", 1, RED)
+                            screen.blit(label, (40, 10))
+                            game_over = True
+
+                # AI turn
+                else:
+                    col, minimax_score = minimax(board, 5, -float('inf'), float('inf'), True)
+
+                    if col in get_valid_locations(board):
+                        row = get_next_open_row(board, col)
+                        animate_drop(board, col, row, 'Y')
+                        drop_piece(board, row, col, 'Y')
+
+                        if is_terminal(board):
+                            label = myfont.render("Player 2 wins!!", 1, YELLOW)
+                            screen.blit(label, (40, 10))
+                            game_over = True
+
+                draw_board(board)
+
+                turn += 1
+                turn = turn % 2
+
+                if game_over:
+                    pygame.time.wait(3000)
 
 if __name__ == "__main__":
-    main = Main()
-    main.run()
+    main()
