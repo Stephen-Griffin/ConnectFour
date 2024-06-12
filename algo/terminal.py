@@ -31,4 +31,4 @@ def winning_move(board, player):
 
 
 def is_terminal(board): 
-    return winning_move(board, PLAYER) or winning_move(board, AI) or len(get_valid_locations(board)) == 0
+    return winning_move(board, player)

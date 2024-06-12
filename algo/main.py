@@ -19,7 +19,7 @@ class Main:
                 print("Column is full. Try another one.")
                 continue
 
-            if self.check_win(board, current_player):
+            if self.check_win(current_player, board):
                 self.print_board(board)
                 print(f"Player {current_player} wins!")
                 break
@@ -41,7 +41,7 @@ class Main:
                 return True
         return False
 
-    def check_win(self, board):
+    def check_win(self, player, board):
         return is_terminal(board);
 
 if __name__ == "__main__":
