@@ -41,13 +41,6 @@ def draw_board(board):
                 pygame.draw.circle(screen, YELLOW, (int(c * SQUARESIZE + SQUARESIZE / 2), height - int((r+1) * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
     pygame.display.update()
 
-def animate_drop(board, col, row, piece):
-    for r in range(row+1):
-        draw_board(board)
-        pygame.draw.circle(screen, RED if piece == 'R' else YELLOW, (int(col * SQUARESIZE + SQUARESIZE / 2), height - int((r+1) * SQUARESIZE + SQUARESIZE / 2)), RADIUS)
-        pygame.display.update()
-        pygame.time.wait(100)
-
 def main():
     board = create_board()
     game_over = False
@@ -79,7 +72,6 @@ def main():
 
                     if col in get_valid_locations(board):
                         row = get_next_open_row(board, col)
-                        animate_drop(board, col, row, 'R')
                         drop_piece(board, row, col, 'R')
 
                         if is_terminal(board):
@@ -93,7 +85,6 @@ def main():
 
                     if col in get_valid_locations(board):
                         row = get_next_open_row(board, col)
-                        animate_drop(board, col, row, 'Y')
                         drop_piece(board, row, col, 'Y')
 
                         if is_terminal(board):
