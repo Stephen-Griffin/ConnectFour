@@ -24,7 +24,7 @@ myfont = pygame.font.SysFont("monospace", 75)
 
 def create_board():
     board = [[' ' for _ in range(COLUMN_COUNT)] for _ in range(ROW_COUNT)]
-    return board
+    return board.reverse
 
 def draw_board(board):
     for c in range(COLUMN_COUNT):
